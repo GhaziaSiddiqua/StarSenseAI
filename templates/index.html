@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarSense AI</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: #f4f4ff;
+            background:
+                radial-gradient(ellipse at top, #27245d, transparent 60%),
+                #080b19;
+            padding: 30px 16px;
+        }
+
+        main {
+            max-width: 720px;
+            margin: auto;
+        }
+
+        header { text-align: center; margin-bottom: 28px; }
+
+        header h1 {
+            font-size: clamp(2rem, 6vw, 3.3rem);
+            margin-bottom: 8px;
+        }
+
+        header p { color: #b9bfdc; line-height: 1.6; }
+
+        form {
+            background: rgba(23, 28, 57, 0.95);
+            border: 1px solid #414875;
+            border-radius: 18px;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        label {
+            display: block;
+            color: #dce0ff;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 9px;
+            border: 1px solid #555d89;
+            background: #0d1228;
+            color: white;
+        }
+
+        button {
+            grid-column: 1 / -1;
+            padding: 14px;
+            border: 0;
+            border-radius: 10px;
+            background: #a99aff;
+            color: #11122b;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled { opacity: 0.6; cursor: wait; }
+
+        #result {
+            margin-top: 22px;
+            padding: 20px;
+            background: #171c39;
+            border: 1px solid #414875;
+            border-radius: 14px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .hidden { display: none; }
+
+        footer {
+            text-align: center;
+            margin-top: 22px;
+            color: #aeb5d7;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 480px) {
+            form { grid-template-columns: 1fr; padding: 18px; }
+        }
+    </style>
+</head>
+
+<body>
+<main>
+    <header>
+        <h1>✦ StarSense AI</h1>
+        <p>Explore the stars through machine learning.<br>
+        Enter stellar measurements to predict a star category.</p>
+    </header>
+
+    <form id="starForm">
+        <div>
+            <label for="temperature">Temperature (K)</label>
+            <input id="temperature" type="number"
+                   value="5778" min="1" step="any" required>
+        </div>
+
+        <div>
+            <label for="luminosity">Luminosity (L/Lo)</label>
+            <input id="luminosity" type="number"
+                   value="1" min="0.00000001" step="any" required>
+        </div>
+
+        <div>
+            <label for="radius">Radius (R/Ro)</label>
+            <input id="radius" type="number"
+                   value="1" min="0.00000001" step="any" required>
+        </div>
+
+        <div>
+            <label for="magnitude">Absolute magnitude (Mv)</label>
+            <input id="magnitude" type="number"
+                   value="4.83" step="any" required>
+        </div>
+
+        <div>
+            <label for="color">Star color</label>
+            <select id="color" required>
+                <option>Red</option>
+                <option>Blue</option>
+                <option>Blue-white</option>
+                <option>White</option>
+                <option>Yellow-white</option>
+                <option>Yellow</option>
+                <option>Orange</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="spectral">Spectral class</label>
+            <select id="spectral" required>
+                <option>M</option>
+                <option>K</option>
+                <option>G</option>
+                <option>F</option>
+                <option>A</option>
+                <option>B</option>
+                <option>O</option>
+            </select>
+        </div>
+
+        <button id="submitBtn" type="submit">
+            Predict Star Type ✨
+        </button>
+    </form>
+
+    <section id="result" class="hidden" aria-live="polite"></section>
+
+    <footer>
+        StarSense AI · Educational ML project<br>
+        Predictions depend on the training dataset and are not
+        scientific confirmation of a star's identity.
+    </footer>
+</main>
+
+<script>
+    const form = document.getElementById("starForm");
+    const result = document.getElementById("result");
+    const button = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        button.disabled = true;
+        button.textContent = "Analyzing star...";
+        result.classList.remove("hidden");
+        result.textContent = "Processing your measurements...";
+
+        const payload = {
+            temperature: Number(document.getElementById("temperature").value),
+            luminosity: Number(document.getElementById("luminosity").value),
+            radius: Number(document.getElementById("radius").value),
+            magnitude: Number(document.getElementById("magnitude").value),
+            color: document.getElementById("color").value,
+            spectral_class: document.getElementById("spectral").value
+        };
+
+        try {
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Prediction failed.");
+            }
+
+            result.replaceChildren();
+
+            const title = document.createElement("h2");
+            title.textContent = "✦ " + data.star_type;
+
+            const description = document.createElement("p");
+            description.textContent =
+                "Predicted star category · Class " + data.class_id;
+
+            result.append(title, description);
+        } catch (error) {
+            result.textContent = "Error: " + error.message;
+        } finally {
+            button.disabled = false;
+            button.textContent = "Predict Star Type ✨";
+        }
+    });
+</script>
+</body>
+</html>
