@@ -4,227 +4,1259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StarSense AI</title>
+
+    <title>StarSense AI | Stellar Explorer</title>
+    <meta name="description" content="Explore stellar categories using the StarSense AI machine learning classifier.">
 
     <style>
-        * { box-sizing: border-box; }
+        :root {
+            --bg: #090b19;
+            --panel: rgba(24, 28, 55, 0.88);
+            --panel-light: #1c2142;
+            --border: rgba(169, 157, 255, 0.22);
+            --purple: #ad9aff;
+            --cyan: #8be1ff;
+            --text: #f6f5ff;
+            --muted: #a8aecb;
+            --success: #a5f3cf;
+            --danger: #ffb6c1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
 
         body {
             margin: 0;
             min-height: 100vh;
-            font-family: Arial, sans-serif;
-            color: #f4f4ff;
+            color: var(--text);
             background:
-                radial-gradient(ellipse at top, #27245d, transparent 60%),
-                #080b19;
-            padding: 30px 16px;
+                radial-gradient(ellipse at 12% 8%, rgba(111, 75, 210, 0.19), transparent 35%),
+                radial-gradient(ellipse at 90% 24%, rgba(44, 125, 184, 0.13), transparent 30%),
+                var(--bg);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            line-height: 1.6;
         }
 
-        main {
-            max-width: 720px;
-            margin: auto;
+        button, input, select {
+            font: inherit;
         }
 
-        header { text-align: center; margin-bottom: 28px; }
-
-        header h1 {
-            font-size: clamp(2rem, 6vw, 3.3rem);
-            margin-bottom: 8px;
-        }
-
-        header p { color: #b9bfdc; line-height: 1.6; }
-
-        form {
-            background: rgba(23, 28, 57, 0.95);
-            border: 1px solid #414875;
-            border-radius: 18px;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        label {
-            display: block;
-            color: #dce0ff;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 9px;
-            border: 1px solid #555d89;
-            background: #0d1228;
-            color: white;
-        }
-
-        button {
-            grid-column: 1 / -1;
-            padding: 14px;
-            border: 0;
-            border-radius: 10px;
-            background: #a99aff;
-            color: #11122b;
-            font-size: 16px;
-            font-weight: bold;
+        button, select {
             cursor: pointer;
         }
 
-        button:disabled { opacity: 0.6; cursor: wait; }
-
-        #result {
-            margin-top: 22px;
-            padding: 20px;
-            background: #171c39;
-            border: 1px solid #414875;
-            border-radius: 14px;
-            text-align: center;
-            line-height: 1.6;
+        button:focus-visible, input:focus-visible, select:focus-visible,
+        a:focus-visible {
+            outline: 2px solid var(--cyan);
+            outline-offset: 3px;
         }
 
-        .hidden { display: none; }
+        .container {
+            width: min(1120px, calc(100% - 40px));
+            margin: auto;
+        }
+
+        /* Navigation */
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(9, 11, 25, 0.82);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-inner {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            width: 39px;
+            height: 39px;
+            color: #0c1025;
+            background: var(--purple);
+            border-radius: 13px;
+            box-shadow: 0 0 24px rgba(173, 154, 255, 0.2);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.91rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .status-pill {
+            color: var(--success);
+            background: rgba(100, 240, 185, 0.08);
+            border: 1px solid rgba(100, 240, 185, 0.2);
+            border-radius: 30px;
+            padding: 6px 11px;
+            font-size: 0.72rem;
+            letter-spacing: 0.8px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        /* Hero */
+
+        .hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1.3fr 0.7fr;
+            align-items: center;
+            gap: 30px;
+            padding: 76px 0 48px;
+            overflow: hidden;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--cyan);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 22px;
+            height: 2px;
+            background: var(--cyan);
+        }
+
+        h1 {
+            max-width: 720px;
+            margin: 17px 0;
+            font-size: clamp(2.5rem, 5vw, 4.2rem);
+            line-height: 1.08;
+            letter-spacing: -2.5px;
+        }
+
+        .gradient-text {
+            color: var(--purple);
+            background: linear-gradient(100deg, #c5b6ff, #8be1ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-description {
+            max-width: 570px;
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+            margin-top: 28px;
+        }
+
+        .button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 9px;
+            min-height: 47px;
+            padding: 12px 20px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            font-weight: 750;
+            text-decoration: none;
+            transition: transform 0.2s, filter 0.2s, border-color 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.07);
+        }
+
+        .button-primary {
+            color: #11132a;
+            background: linear-gradient(110deg, #c1afff, #a998ff);
+            box-shadow: 0 8px 28px rgba(173, 154, 255, 0.16);
+        }
+
+        .button-secondary {
+            color: var(--text);
+            border-color: var(--border);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Orbital illustration */
+
+        .orbit-scene {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-height: 285px;
+        }
+
+        .orbit {
+            position: absolute;
+            width: 245px;
+            height: 245px;
+            border: 1px solid rgba(173, 154, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        .orbit-two {
+            width: 185px;
+            height: 285px;
+            transform: rotate(48deg);
+            border-color: rgba(139, 225, 255, 0.3);
+        }
+
+        .orbit-three {
+            width: 285px;
+            height: 140px;
+            transform: rotate(-32deg);
+            border-color: rgba(173, 154, 255, 0.22);
+        }
+
+        .central-star {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            place-items: center;
+            width: 115px;
+            height: 115px;
+            border-radius: 50%;
+            color: #fff4c6;
+            font-size: 4.5rem;
+            background: radial-gradient(circle, #fff4ce 0%, #e3b8ff 32%, #7663da 65%, transparent 72%);
+            filter: drop-shadow(0 0 30px rgba(191, 159, 255, 0.6));
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        .orbit-dot {
+            position: absolute;
+            z-index: 2;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 18px var(--cyan);
+        }
+
+        .dot-one {
+            top: 28px;
+            right: 78px;
+        }
+
+        .dot-two {
+            bottom: 48px;
+            left: 46px;
+            background: var(--purple);
+            box-shadow: 0 0 18px var(--purple);
+        }
+
+        @keyframes glow {
+            from { transform: scale(0.96); }
+            to { transform: scale(1.04); }
+        }
+
+        /* Main layout */
+
+        .section-heading {
+            margin-bottom: 22px;
+        }
+
+        .section-heading h2 {
+            margin: 0 0 5px;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            letter-spacing: -0.7px;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .explorer-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            align-items: start;
+            gap: 22px;
+        }
+
+        .panel {
+            min-width: 0;
+            padding: 27px;
+            border: 1px solid var(--border);
+            border-radius: 21px;
+            background: var(--panel);
+            box-shadow: 0 20px 65px rgba(0, 0, 0, 0.12);
+        }
+
+        .panel-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .panel-heading h2 {
+            margin: 0;
+            font-size: 1.18rem;
+        }
+
+        .panel-icon {
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 43px;
+            height: 43px;
+            border-radius: 13px;
+            color: var(--purple);
+            background: rgba(173, 154, 255, 0.12);
+            font-size: 1.25rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 19px 16px;
+        }
+
+        .field {
+            min-width: 0;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e8e8fb;
+            font-size: 0.88rem;
+            font-weight: 650;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            min-height: 49px;
+            padding: 12px;
+            color: var(--text);
+            border: 1px solid #42496d;
+            border-radius: 11px;
+            background: #10142b;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field input:focus, .field select:focus {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(173, 154, 255, 0.1);
+            outline: none;
+        }
+
+        .field select option {
+            color: white;
+            background: #10142b;
+        }
+
+        .field-hint {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.72rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 11px;
+            margin-top: 24px;
+        }
+
+        .form-actions .button-primary {
+            flex: 1;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.7;
+        }
+
+        .message {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            overflow-wrap: anywhere;
+        }
+
+        .message.error {
+            display: block;
+            color: var(--danger);
+            background: rgba(255, 90, 125, 0.09);
+            border: 1px solid rgba(255, 90, 125, 0.2);
+        }
+
+        /* Prediction */
+
+        .result-panel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-panel::before {
+            content: "";
+            position: absolute;
+            top: -90px;
+            right: -90px;
+            width: 210px;
+            height: 210px;
+            border-radius: 50%;
+            background: rgba(173, 154, 255, 0.1);
+            filter: blur(25px);
+            pointer-events: none;
+        }
+
+        .result-content {
+            position: relative;
+        }
+
+        .result-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 285px;
+        }
+
+        .result-symbol {
+            display: grid;
+            place-items: center;
+            width: 75px;
+            height: 75px;
+            margin: 4px 0 20px;
+            color: #fff0b0;
+            border: 1px solid rgba(173, 154, 255, 0.3);
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(173, 154, 255, 0.2), rgba(139, 225, 255, 0.08));
+            font-size: 2.6rem;
+        }
+
+        .result-label {
+            color: var(--cyan);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+        }
+
+        .result-title {
+            margin: 6px 0 8px;
+            font-size: clamp(1.6rem, 3vw, 2.1rem);
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+
+        .result-description {
+            color: var(--muted);
+            font-size: 0.94rem;
+        }
+
+        .class-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin: 12px 0 20px;
+            padding: 7px 11px;
+            color: #d8ceff;
+            border: 1px solid rgba(173, 154, 255, 0.25);
+            border-radius: 9px;
+            background: rgba(173, 154, 255, 0.08);
+            font-size: 0.78rem;
+            font-weight: 750;
+        }
+
+        .facts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 11px;
+            margin-top: 20px;
+        }
+
+        .fact {
+            padding: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.025);
+            min-width: 0;
+        }
+
+        .fact-label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        .fact-value {
+            display: block;
+            font-size: 0.96rem;
+            font-weight: 750;
+            overflow-wrap: anywhere;
+        }
+
+        .result-note {
+            margin-top: 19px;
+            padding-top: 14px;
+            color: var(--muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.76rem;
+        }
+
+        /* Star type cards */
+
+        .categories-section {
+            padding: 74px 0 20px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .category-card {
+            padding: 21px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: rgba(24, 28, 55, 0.58);
+            transition: transform 0.2s, border-color 0.2s, background 0.2s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(173, 154, 255, 0.55);
+            background: var(--panel-light);
+        }
+
+        .category-symbol {
+            display: inline-block;
+            margin-bottom: 9px;
+            font-size: 1.65rem;
+        }
+
+        .category-card h3 {
+            margin: 0 0 7px;
+            font-size: 1rem;
+        }
+
+        .category-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.83rem;
+        }
+
+        /* Model info */
+
+        .about-section {
+            padding: 55px 0 75px;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+
+        .about-copy {
+            color: var(--muted);
+        }
+
+        .about-copy strong {
+            color: var(--text);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric {
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(24, 28, 55, 0.58);
+        }
+
+        .metric-value {
+            display: block;
+            color: var(--purple);
+            font-size: 1.6rem;
+            font-weight: 850;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .disclaimer {
+            margin-top: 20px;
+            padding: 15px 17px;
+            color: #c7cbe0;
+            border-left: 3px solid var(--purple);
+            border-radius: 0 10px 10px 0;
+            background: rgba(173, 154, 255, 0.06);
+            font-size: 0.82rem;
+        }
 
         footer {
-            text-align: center;
-            margin-top: 22px;
-            color: #aeb5d7;
-            font-size: 12px;
-            line-height: 1.6;
+            padding: 25px 0;
+            color: var(--muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            font-size: 0.8rem;
         }
 
-        @media (max-width: 480px) {
-            form { grid-template-columns: 1fr; padding: 18px; }
+        .footer-inner {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        footer a {
+            color: var(--purple);
+            text-decoration: none;
+        }
+
+        @media (max-width: 800px) {
+            .hero {
+                grid-template-columns: 1fr;
+                padding-top: 52px;
+            }
+
+            .orbit-scene {
+                min-height: 220px;
+            }
+
+            .explorer-grid, .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-empty {
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .container {
+                width: min(100% - 26px, 1120px);
+            }
+
+            .nav-inner {
+                min-height: 65px;
+            }
+
+            .nav-links {
+                gap: 13px;
+            }
+
+            .nav-links a {
+                font-size: 0.78rem;
+            }
+
+            .status-pill {
+                display: none;
+            }
+
+            .hero {
+                padding: 45px 0 35px;
+            }
+
+            h1 {
+                letter-spacing: -1.5px;
+            }
+
+            .panel {
+                padding: 19px;
+                border-radius: 16px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .category-card {
+                padding: 15px;
+            }
+
+            .facts {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .categories-section {
+                padding-top: 52px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 
 <body>
-<main>
-    <header>
-        <h1>✦ StarSense AI</h1>
-        <p>Explore the stars through machine learning.<br>
-        Enter stellar measurements to predict a star category.</p>
-    </header>
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a class="brand" href="#" style="color: inherit; text-decoration: none;">
+                <span class="brand-icon">✦</span>
+                <span>StarSense AI</span>
+            </a>
 
-    <form id="starForm">
-        <div>
-            <label for="temperature">Temperature (K)</label>
-            <input id="temperature" type="number"
-                   value="5778" min="1" step="any" required>
+            <div class="nav-links">
+                <a href="#explorer">Explorer</a>
+                <a href="#categories">Star types</a>
+                <a href="#about">About</a>
+                <span class="status-pill">✦ ML POWERED</span>
+            </div>
         </div>
+    </nav>
 
-        <div>
-            <label for="luminosity">Luminosity (L/Lo)</label>
-            <input id="luminosity" type="number"
-                   value="1" min="0.00000001" step="any" required>
-        </div>
+    <main class="container">
+        <section class="hero">
+            <div>
+                <span class="eyebrow">Stellar classification lab</span>
 
-        <div>
-            <label for="radius">Radius (R/Ro)</label>
-            <input id="radius" type="number"
-                   value="1" min="0.00000001" step="any" required>
-        </div>
+                <h1>
+                    Discover the story<br>
+                    written in the <span class="gradient-text">stars.</span>
+                </h1>
 
-        <div>
-            <label for="magnitude">Absolute magnitude (Mv)</label>
-            <input id="magnitude" type="number"
-                   value="4.83" step="any" required>
-        </div>
+                <p class="hero-description">
+                    Explore the universe through machine learning.
+                    Enter stellar measurements and discover which of
+                    six star categories your measurements resemble.
+                </p>
 
-        <div>
-            <label for="color">Star color</label>
-            <select id="color" required>
-                <option>Red</option>
-                <option>Blue</option>
-                <option>Blue-white</option>
-                <option>White</option>
-                <option>Yellow-white</option>
-                <option>Yellow</option>
-                <option>Orange</option>
-            </select>
-        </div>
+                <div class="hero-actions">
+                    <a href="#explorer" class="button button-primary">
+                        Explore a star <span>↗</span>
+                    </a>
+                    <a href="#about" class="button button-secondary">
+                        About the model
+                    </a>
+                </div>
+            </div>
 
-        <div>
-            <label for="spectral">Spectral class</label>
-            <select id="spectral" required>
-                <option>M</option>
-                <option>K</option>
-                <option>G</option>
-                <option>F</option>
-                <option>A</option>
-                <option>B</option>
-                <option>O</option>
-            </select>
-        </div>
+            <div class="orbit-scene" aria-hidden="true">
+                <div class="orbit"></div>
+                <div class="orbit orbit-two"></div>
+                <div class="orbit orbit-three"></div>
+                <div class="central-star">✦</div>
+                <div class="orbit-dot dot-one"></div>
+                <div class="orbit-dot dot-two"></div>
+            </div>
+        </section>
 
-        <button id="submitBtn" type="submit">
-            Predict Star Type ✨
-        </button>
-    </form>
+        <section id="explorer">
+            <div class="section-heading">
+                <h2>Stellar Explorer</h2>
+                <p>Enter the measurements below to run a prediction.</p>
+            </div>
 
-    <section id="result" class="hidden" aria-live="polite"></section>
+            <div class="explorer-grid">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div class="panel-icon">⌘</div>
+                        <div>
+                            <h2>Star measurements</h2>
+                            <span style="color: var(--muted); font-size: 0.8rem;">
+                                Six input features
+                            </span>
+                        </div>
+                    </div>
+
+                    <form id="star-form">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="temperature">Temperature (K)</label>
+                                <input
+                                    id="temperature"
+                                    name="temperature"
+                                    type="number"
+                                    min="0.01"
+                                    step="any"
+                                    value="5778"
+                                    required
+                                >
+                                <span class="field-hint">Surface temperature in kelvin</span>
+                            </div>
+
+                            <div class="field">
+                                <label for="luminosity">Luminosity (L/L☉)</label>
+                                <input
+                                    id="luminosity"
+                                    name="luminosity"
+                                    type="number"
+                                    min="0.000001"
+                                    step="any"
+                                    value="1"
+                                    required
+                                >
+                                <span class="field-hint">Relative to the Sun</span>
+                            </div>
+
+                            <div class="field">
+                                <label for="radius">Radius (R/R☉)</label>
+                                <input
+                                    id="radius"
+                                    name="radius"
+                                    type="number"
+                                    min="0.000001"
+                                    step="any"
+                                    value="1"
+                                    required
+                                >
+                                <span class="field-hint">Relative to the Sun</span>
+                            </div>
+
+                            <div class="field">
+                                <label for="magnitude">Absolute magnitude (Mv)</label>
+                                <input
+                                    id="magnitude"
+                                    name="magnitude"
+                                    type="number"
+                                    step="any"
+                                    value="4.83"
+                                    required
+                                >
+                                <span class="field-hint">Intrinsic brightness indicator</span>
+                            </div>
+
+                            <div class="field">
+                                <label for="color">Star color</label>
+                                <select id="color" name="color" required>
+                                    <option value="Red">Red</option>
+                                    <option value="Blue">Blue</option>
+                                    <option value="Blue White">Blue White</option>
+                                    <option value="Blue-white">Blue-white</option>
+                                    <option value="Blue White">Blue White</option>
+                                    <option value="White">White</option>
+                                    <option value="Yellow White" selected>Yellow White</option>
+                                    <option value="Yellowish White">Yellowish White</option>
+                                    <option value="Yellow">Yellow</option>
+                                    <option value="Orange">Orange</option>
+                                    <option value="Whitish">Whitish</option>
+                                    <option value="Orange-Red">Orange-Red</option>
+                                    <option value="Pale yellow orange">Pale yellow orange</option>
+                                    <option value="White-Yellow">White-Yellow</option>
+                                    <option value="yellowish">yellowish</option>
+                                    <option value="yellow-white">yellow-white</option>
+                                </select>
+                                <span class="field-hint">Choose a color category</span>
+                            </div>
+
+                            <div class="field">
+                                <label for="spectral">Spectral class</label>
+                                <select id="spectral" name="spectral_class" required>
+                                    <option value="M">M</option>
+                                    <option value="K">K</option>
+                                    <option value="G" selected>G</option>
+                                    <option value="F">F</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="O">O</option>
+                                </select>
+                                <span class="field-hint">Spectral classification</span>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="button button-primary" id="predict-button" type="submit">
+                                ✦ Predict star type
+                            </button>
+                            <button class="button button-secondary" id="reset-button" type="reset">
+                                Reset
+                            </button>
+                        </div>
+
+                        <div id="error-message" class="message" role="alert"></div>
+                    </form>
+                </div>
+
+                <div class="panel result-panel" aria-live="polite">
+                    <div class="panel-heading">
+                        <div class="panel-icon">✧</div>
+                        <div>
+                            <h2>Prediction result</h2>
+                            <span style="color: var(--muted); font-size: 0.8rem;">
+                                Your stellar classification
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="result-content" id="result-content">
+                        <div class="result-empty">
+                            <div class="result-symbol">✦</div>
+                            <span class="result-label">Ready to explore</span>
+                            <h3 class="result-title">Your star awaits.</h3>
+                            <p class="result-description">
+                                Enter the stellar measurements and select
+                                “Predict star type” to see the model's result.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="categories" class="categories-section">
+            <div class="section-heading">
+                <span class="eyebrow">Explore the universe</span>
+                <h2>Six stellar categories</h2>
+                <p>Discover the categories used by our educational classifier.</p>
+            </div>
+
+            <div class="category-grid">
+                <article class="category-card">
+                    <span class="category-symbol" style="color: #e2a878;">●</span>
+                    <h3>Brown Dwarf</h3>
+                    <p>A substellar object that does not sustain ordinary hydrogen fusion.</p>
+                </article>
+
+                <article class="category-card">
+                    <span class="category-symbol" style="color: #ff806c;">✦</span>
+                    <h3>Red Dwarf</h3>
+                    <p>A small, relatively cool star that can burn its fuel for a very long time.</p>
+                </article>
+
+                <article class="category-card">
+                    <span class="category-symbol" style="color: #c8e6ff;">✧</span>
+                    <h3>White Dwarf</h3>
+                    <p>A compact stellar remnant left after a suitable star sheds its outer layers.</p>
+                </article>
+
+                <article class="category-card">
+                    <span class="category-symbol" style="color: #ffdf88;">✹</span>
+                    <h3>Main Sequence</h3>
+                    <p>The long stage when a star fuses hydrogen into helium in its core.</p>
+                </article>
+
+                <article class="category-card">
+                    <span class="category-symbol" style="color: #ffb7dc;">✷</span>
+                    <h3>Supergiant</h3>
+                    <p>An exceptionally large and luminous star in an advanced evolutionary stage.</p>
+                </article>
+
+                <article class="category-card">
+                    <span class="category-symbol" style="color: #a9a5ff;">✺</span>
+                    <h3>Hypergiant</h3>
+                    <p>An extremely luminous, massive star with substantial mass loss.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="about" class="about-section">
+            <div class="section-heading">
+                <span class="eyebrow">Behind the prediction</span>
+                <h2>Meet the model</h2>
+                <p>A machine learning project exploring stellar classification.</p>
+            </div>
+
+            <div class="about-grid">
+                <div class="panel">
+                    <div class="panel-heading">
+                        <div class="panel-icon">⌘</div>
+                        <h2>How it works</h2>
+                    </div>
+
+                    <div class="about-copy">
+                        <p>
+                            <strong>StarSense AI</strong> uses a trained
+                            classification pipeline to map stellar measurements
+                            to one of six categories represented in its dataset.
+                        </p>
+
+                        <p>
+                            The pipeline preprocesses numeric and categorical
+                            inputs before making a prediction. The website sends
+                            your measurements to a FastAPI backend, which returns
+                            the predicted category.
+                        </p>
+
+                        <p>
+                            The prediction is a model output, not a confirmed
+                            astronomical diagnosis.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="metric-grid">
+                    <div class="metric">
+                        <span class="metric-value">240</span>
+                        <span class="metric-label">Dataset records</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">6</span>
+                        <span class="metric-label">Target categories</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">6</span>
+                        <span class="metric-label">Input features</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">ML</span>
+                        <span class="metric-label">Classification pipeline</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="disclaimer">
+                <strong>Note:</strong> This is an educational demonstration
+                trained on a small dataset. Predictions depend on the training
+                data and may not generalize to real-world astronomical observations.
+            </div>
+        </section>
+    </main>
 
     <footer>
-        StarSense AI · Educational ML project<br>
-        Predictions depend on the training dataset and are not
-        scientific confirmation of a star's identity.
+        <div class="container footer-inner">
+            <span>✦ StarSense AI · A machine learning project</span>
+            <a href="https://github.com/GhaziaSiddiqua/StarSenseAI"
+               target="_blank" rel="noopener noreferrer">
+                View project on GitHub ↗
+            </a>
+        </div>
     </footer>
-</main>
 
-<script>
-    const form = document.getElementById("starForm");
-    const result = document.getElementById("result");
-    const button = document.getElementById("submitBtn");
+    <script>
+        const form = document.getElementById("star-form");
+        const predictButton = document.getElementById("predict-button");
+        const resetButton = document.getElementById("reset-button");
+        const errorMessage = document.getElementById("error-message");
+        const resultContent = document.getElementById("result-content");
 
-    form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        button.disabled = true;
-        button.textContent = "Analyzing star...";
-        result.classList.remove("hidden");
-        result.textContent = "Processing your measurements...";
-
-        const payload = {
-            temperature: Number(document.getElementById("temperature").value),
-            luminosity: Number(document.getElementById("luminosity").value),
-            radius: Number(document.getElementById("radius").value),
-            magnitude: Number(document.getElementById("magnitude").value),
-            color: document.getElementById("color").value,
-            spectral_class: document.getElementById("spectral").value
+        const starDescriptions = {
+            "Brown Dwarf":
+                "A substellar object that does not sustain ordinary hydrogen fusion.",
+            "Red Dwarf":
+                "A small, relatively cool star that can burn its fuel for a very long time.",
+            "White Dwarf":
+                "A compact stellar remnant left after a suitable star sheds its outer layers.",
+            "Main Sequence":
+                "A star in the long-lived stage of hydrogen fusion in its core.",
+            "Supergiant":
+                "An exceptionally large and luminous star in an advanced evolutionary stage.",
+            "Hypergiant":
+                "An extremely luminous, massive star with substantial mass loss."
         };
 
-        try {
-            const response = await fetch("/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+        const starSymbols = {
+            "Brown Dwarf": "●",
+            "Red Dwarf": "✦",
+            "White Dwarf": "✧",
+            "Main Sequence": "✹",
+            "Supergiant": "✷",
+            "Hypergiant": "✺"
+        };
 
-            const data = await response.json();
+        function escapeHTML(value) {
+            return String(value).replace(/[&<>"']/g, character => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            })[character]);
+        }
 
-            if (!response.ok) {
-                throw new Error(data.detail || "Prediction failed.");
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.className = "message error";
+        }
+
+        function clearError() {
+            errorMessage.textContent = "";
+            errorMessage.className = "message";
+        }
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            clearError();
+
+            if (!form.reportValidity()) {
+                return;
             }
 
-            result.replaceChildren();
+            const payload = {
+                temperature: Number(form.temperature.value),
+                luminosity: Number(form.luminosity.value),
+                radius: Number(form.radius.value),
+                magnitude: Number(form.magnitude.value),
+                color: form.color.value,
+                spectral_class: form.spectral_class.value
+            };
 
-            const title = document.createElement("h2");
-            title.textContent = "✦ " + data.star_type;
+            if (
+                !Number.isFinite(payload.temperature) ||
+                !Number.isFinite(payload.luminosity) ||
+                !Number.isFinite(payload.radius) ||
+                !Number.isFinite(payload.magnitude) ||
+                payload.temperature <= 0 ||
+                payload.luminosity <= 0 ||
+                payload.radius <= 0
+            ) {
+                showError("Enter valid numbers. Temperature, luminosity and radius must be greater than zero.");
+                return;
+            }
 
-            const description = document.createElement("p");
-            description.textContent =
-                "Predicted star category · Class " + data.class_id;
+            predictButton.disabled = true;
+            predictButton.textContent = "⏳ Analysing measurements...";
 
-            result.append(title, description);
-        } catch (error) {
-            result.textContent = "Error: " + error.message;
-        } finally {
-            button.disabled = false;
-            button.textContent = "Predict Star Type ✨";
-        }
-    });
-</script>
+            resultContent.innerHTML = `
+                <div class="result-empty">
+                    <div class="result-symbol">✧</div>
+                    <span class="result-label">Processing</span>
+                    <h3 class="result-title">Reading the stars...</h3>
+                    <p class="result-description">
+                        The model is analysing your measurements.
+                    </p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || "The prediction request failed. Please check your measurements."
+                    );
+                }
+
+                const starType = String(data.star_type);
+                const description = starDescriptions[starType] ||
+                    "The model assigned this category to the supplied measurements.";
+                const symbol = starSymbols[starType] || "✦";
+
+                resultContent.innerHTML = `
+                    <div class="result-symbol" aria-hidden="true">${symbol}</div>
+
+                    <span class="result-label">Predicted category</span>
+                    <h3 class="result-title">${escapeHTML(starType)}</h3>
+
+                    <span class="class-badge">
+                        ✦ CLASS ${escapeHTML(data.class_id)}
+                    </span>
+
+                    <p class="result-description">
+                        ${escapeHTML(description)}
+                    </p>
+
+                    <div class="facts">
+                        <div class="fact">
+                            <span class="fact-label">Temperature</span>
+                            <span class="fact-value">${escapeHTML(payload.temperature.toLocaleString())} K</span>
+                        </div>
+                        <div class="fact">
+                            <span class="fact-label">Luminosity</span>
+                            <span class="fact-value">${escapeHTML(payload.luminosity)} L☉</span>
+                        </div>
+                        <div class="fact">
+                            <span class="fact-label">Radius</span>
+                            <span class="fact-value">${escapeHTML(payload.radius)} R☉</span>
+                        </div>
+                        <div class="fact">
+                            <span class="fact-label">Spectral class</span>
+                            <span class="fact-value">${escapeHTML(payload.spectral_class)}</span>
+                        </div>
+                    </div>
+
+                    <p class="result-note">
+                        Educational model prediction. This is not a measure
+                        of prediction confidence or scientific certainty.
+                    </p>
+                `;
+            } catch (error) {
+                showError(error.message || "Unable to contact the prediction service.");
+                resultContent.innerHTML = `
+                    <div class="result-empty">
+                        <div class="result-symbol">!</div>
+                        <span class="result-label">Prediction unavailable</span>
+                        <h3 class="result-title">Let's try again.</h3>
+                        <p class="result-description">
+                            Check your measurements and submit the form again.
+                        </p>
+                    </div>
+                `;
+            } finally {
+                predictButton.disabled = false;
+                predictButton.textContent = "✦ Predict star type";
+            }
+        });
+
+        resetButton.addEventListener("click", () => {
+            clearError();
+
+            resultContent.innerHTML = `
+                <div class="result-empty">
+                    <div class="result-symbol">✦</div>
+                    <span class="result-label">Ready to explore</span>
+                    <h3 class="result-title">Your star awaits.</h3>
+                    <p class="result-description">
+                        Enter the stellar measurements and select
+                        “Predict star type” to see the model's result.
+                    </p>
+                </div>
+            `;
+        });
+    </script>
 </body>
 </html>
